@@ -1,0 +1,125 @@
+/* ❌ 已移除 Google Fonts 引用 */
+
+:root {
+  --bg-dark: #050505;
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --cassell-red: #D32F2F;
+  --neon-red: #ff1744;
+  --text-main: #e4e4e7;
+  --easing: cubic-bezier(0.19, 1, 0.22, 1);
+
+  /* ✅ 高级本地字体栈 (System Font Stack) */
+  /* 优先 Win11 的 Segoe UI Variable，其次是 Win10，最后是 Mac/Linux */
+  --font-sans: "Segoe UI Variable Display", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "HarmonyOS Sans", "Helvetica Neue", sans-serif;
+  
+  /* 优先 Windows Terminal 的 Cascadia Code，其次是 Consolas/Monaco */
+  --font-mono: "Cascadia Code", "Consolas", "Monaco", "Courier New", "ui-monospace", monospace;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  /* 应用本地无衬线字体 */
+  font-family: var(--font-sans);
+  /* 优化字体渲染，使其在深色背景下更清晰 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow: hidden;
+  margin: 0;
+}
+
+/* 专门针对代码/终端/ID 的样式，应用等宽字体 */
+.font-mono {
+  font-family: var(--font-mono) !important;
+}
+
+/* === 背景特效 (保持不变) === */
+.bg-layer {
+  position: fixed; inset: 0; z-index: -2;
+  background-image: url('https://w.wallhaven.cc/full/zy/wallhaven-zyxvqy.jpg');
+  background-size: cover; background-position: center;
+  opacity: 0.3; filter: grayscale(50%) contrast(120%);
+  animation: bg-breathe 20s infinite alternate;
+}
+@keyframes bg-breathe { from { transform: scale(1); } to { transform: scale(1.05); } }
+
+.mica-overlay {
+  position: fixed; inset: 0; z-index: -1;
+  background: rgba(5, 5, 5, 0.85);
+  backdrop-filter: blur(50px);
+}
+
+/* 扫描线效果 (CRT Scanline) */
+.scanlines::before {
+  content: " ";
+  display: block;
+  position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  z-index: 999;
+  background-size: 100% 2px, 3px 100%;
+  pointer-events: none;
+}
+
+/* === 高级组件 (保持不变) === */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(12px);
+  transition: all 0.4s var(--easing);
+}
+.glass-panel:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5);
+}
+
+/* 导航激活态 */
+.nav-btn.active {
+  background: linear-gradient(90deg, rgba(211, 47, 47, 0.2) 0%, transparent 100%);
+  color: white;
+  border-left: 3px solid var(--cassell-red);
+  text-shadow: 0 0 10px var(--cassell-red);
+  font-weight: 600; /* 加粗激活态 */
+}
+
+/* === 动画关键帧 (保持不变) === */
+.view-enter {
+  animation: slide-up-fade 0.6s var(--easing) forwards;
+  opacity: 0;
+}
+@keyframes slide-up-fade {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.stagger-item {
+  opacity: 0;
+  animation: fade-in-right 0.5s var(--easing) forwards;
+}
+@keyframes fade-in-right {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.cursor-blink::after {
+  content: '▋';
+  margin-left: 4px;
+  color: var(--cassell-red);
+  animation: blink 1s step-end infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+.glitch-text:hover {
+  animation: glitch-anim 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+  color: var(--neon-red);
+}
+@keyframes glitch-anim {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CASSELL GATEWAY | NORN</title>
+    <!-- Markdown 解析 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- 代码高亮 CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <!-- 代码高亮 JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <!-- 1. Tailwind CDN (保持) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. 配置 Tailwind 使用 CSS 变量中的本地字体栈 -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        // 引用 style.css 中定义的变量
+                        sans: ['var(--font-sans)'],
+                        mono: ['var(--font-mono)'],
+                    },
+                    colors: {
+                        cassell: { 500: '#D32F2F', 600: '#B71C1C' }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- 3. Remix Icons (图标库建议保留 CDN，或者下载到本地 public/fonts 目录引用) -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    
+    <!-- 4. 本地样式 -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="flex h-screen w-full selection:bg-red-900 selection:text-white">
+
+    <div class="bg-layer"></div>
+    <div class="mica-overlay"></div>
+    <div class="scanlines pointer-events-none fixed inset-0 z-50 opacity-10"></div>
+
+    <!-- Sidebar -->
+    <aside class="w-72 h-full flex flex-col border-r border-white/5 bg-black/40 z-20 backdrop-blur-xl transition-all duration-500">
+        <div class="h-20 flex items-center px-6 gap-3 border-b border-white/5">
+            <div class="w-8 h-8 rounded bg-gradient-to-br from-red-700 to-black flex items-center justify-center shadow-[0_0_15px_#b91c1c]">
+                <i class="ri-ancient-gate-fill text-white text-sm"></i>
+            </div>
+            <div>
+                <!-- 使用 font-bold 和 glitch-text -->
+                <div class="text-sm font-bold tracking-[0.2em] text-white glitch-text cursor-default">CASSELL</div>
+                <!-- 使用 font-mono 调用本地等宽字体 -->
+                <div class="text-[10px] text-zinc-500 font-mono">Ver 4.1V Thinking</div>
+            </div>
+        </div>
+
+        <nav class="flex-1 p-3 space-y-2 mt-4">
+            <button onclick="App.loadView('dashboard')" id="nav-dashboard" class="nav-btn active w-full flex items-center gap-3 px-4 py-3 rounded text-zinc-400 hover:text-white hover:bg-white/5 transition-all text-sm group">
+                <i class="ri-dashboard-line group-hover:scale-110 transition-transform"></i> 总览 Dashboard
+            </button>
+            <button onclick="App.loadView('library')" id="nav-library" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded text-zinc-400 hover:text-white hover:bg-white/5 transition-all text-sm group">
+                <i class="ri-book-open-line group-hover:scale-110 transition-transform"></i> 档案 Archives
+            </button>
+            <button onclick="App.loadView('chat')" id="nav-chat" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded text-zinc-400 hover:text-white hover:bg-white/5 transition-all text-sm group">
+                <i class="ri-robot-2-line group-hover:text-red-500 transition-colors"></i> 诺玛终端 NORN
+            </button>
+        </nav>
+
+        <div class="p-4 border-t border-white/5">
+            <div class="glass-panel p-3 rounded-xl flex items-center gap-3 cursor-pointer group">
+                <img src="https://ui-avatars.com/api/?name=L+M&background=333&color=fff" class="w-9 h-9 rounded-full border border-white/10 group-hover:border-red-500 transition-colors">
+                <div class="flex-1 min-w-0">
+                    <div class="text-xs font-bold text-white">S-Class Agent</div>
+                    <div class="text-[10px] text-zinc-500 font-mono">Level: SS</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col relative z-10 min-w-0">
+        <header class="h-16 border-b border-white/5 flex items-center justify-between px-8 bg-black/10 backdrop-blur-sm shrink-0">
+            <div class="flex items-center gap-2 text-xs text-zinc-500 font-mono">
+                <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_#22c55e]"></span>
+                SYSTEM ONLINE // GLM-4.1V CONNECTED
+            </div>
+        </header>
+
+        <div id="app-viewport" class="flex-1 overflow-y-auto p-8 relative scroll-smooth">
+            <!-- 动态内容区域 -->
+        </div>
+    </main>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
