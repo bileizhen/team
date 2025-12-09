@@ -1,3 +1,5 @@
+// 文件路径: js/app.js
+
 const App = {
     chatHistory: [],
 
@@ -19,14 +21,34 @@ const App = {
         const activeBtn = document.getElementById(`nav-${viewName}`);
         if(activeBtn) activeBtn.classList.add('active');
 
-        // 获取并渲染 HTML 片段
+        // 获取并渲染 HTML
         const viewport = document.getElementById('app-viewport');
         try {
+            // 注意：这里确保你的 views 文件夹里有对应的 html 文件
             const response = await fetch(`views/${viewName}.html`);
+            if(!response.ok) throw new Error("View not found");
             const html = await response.text();
             viewport.innerHTML = html;
         } catch (err) {
-            viewport.innerHTML = `<div class="text-red-500 p-8">Error loading module: ${err}</div>`;
+            viewport.innerHTML = `<div class="text-red-500 p-8 font-mono">Error loading view: ${err.message}</div>`;
+        }
+        
+        // 如果加载的是聊天页面，恢复历史记录
+        if(viewName === 'chat') {
+            this.restoreChatUI();
+        }
+    },
+
+    restoreChatUI() {
+        const container = document.getElementById('chat-container');
+        if(!container) return;
+        // 清空除了欢迎语之外的内容
+        // (这里简化处理，直接清空重绘历史，你可以根据需要保留欢迎语DOM)
+        if(this.chatHistory.length > 0) {
+            container.innerHTML = ''; 
+            this.chatHistory.forEach(msg => {
+                this.appendMessage(msg.role === 'user' ? 'user' : 'norn', msg.content, false);
+            });
         }
     },
 
@@ -41,9 +63,8 @@ const App = {
         this.appendMessage('user', message);
         this.chatHistory.push({ role: 'user', content: message });
 
-        // 2. 显示思考状态
-        const indicator = document.getElementById('thinking-indicator');
-        if(indicator) indicator.classList.remove('hidden');
+        // 2. 显示 Loading 状态
+        const loadingId = this.appendLoading();
 
         try {
             // 3. 调用后端 API
@@ -51,37 +72,71 @@ const App = {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
-                    messages: this.chatHistory 
+                    message: message, // 发送给后端的字段名
+                    history: this.chatHistory.slice(-6) // 只带最近6条历史
                 })
             });
 
             const data = await res.json();
             
-            if(indicator) indicator.classList.add('hidden');
+            // 移除 Loading
+            const loadingEl = document.getElementById(loadingId);
+            if(loadingEl) loadingEl.remove();
 
+            // 4. 关键：处理响应结果
             if (data.choices && data.choices[0]) {
+                // 成功：获取 AI 回复
                 const reply = data.choices[0].message.content;
                 this.appendMessage('norn', reply);
                 this.chatHistory.push({ role: 'assistant', content: reply });
+            } else if (data.error) {
+                // 失败：显示后端传回的具体错误
+                console.error("Backend Error:", data);
+                this.appendMessage('norn', `❌ **系统警告 (System Alert)**\n\n错误信息：\`${data.error}\`\n\n详细日志：\`${data.details || '无'}\``);
             } else {
-                this.appendMessage('norn', 'Error: Neural Link Broken.');
+                // 未知情况
+                this.appendMessage('norn', '⚠️ **连接异常**：收到空响应，请检查网络或控制台日志。');
+                console.log("Raw Data:", data);
             }
 
         } catch (err) {
-            if(indicator) indicator.classList.add('hidden');
-            this.appendMessage('norn', `System Failure: ${err.message}`);
+            // 网络层面的错误
+            const loadingEl = document.getElementById(loadingId);
+            if(loadingEl) loadingEl.remove();
+            
+            this.appendMessage('norn', `⛔ **通讯链路中断**\n\n原因：\`${err.message}\``);
         } finally {
             input.disabled = false;
             input.focus();
         }
     },
 
-    appendMessage(role, text) {
+    appendLoading() {
+        const container = document.getElementById('chat-container');
+        if(!container) return;
+        const id = 'loading-' + Date.now();
+        const div = document.createElement('div');
+        div.id = id;
+        div.className = "flex gap-4 mb-6 animate-pulse";
+        div.innerHTML = `
+            <div class="w-10 h-10 rounded bg-red-900/10 border border-red-500/20 flex items-center justify-center shrink-0">
+                <i class="ri-loader-5-line text-red-500 animate-spin"></i>
+            </div>
+            <div class="flex items-center text-xs text-red-500/70 font-mono">
+                ANALYZING DRAGON SCRIPT...
+            </div>
+        `;
+        container.appendChild(div);
+        container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+        return id;
+    },
+
+    appendMessage(role, text, animate = true) {
         const container = document.getElementById('chat-container');
         if (!container) return;
 
         const div = document.createElement('div');
-        div.className = `flex gap-4 msg-enter mb-6 ${role === 'user' ? 'flex-row-reverse' : ''}`;
+        div.className = `flex gap-4 mb-6 msg-enter ${role === 'user' ? 'flex-row-reverse' : ''}`;
         
         if (role === 'user') {
             div.innerHTML = `
@@ -90,46 +145,38 @@ const App = {
                 </div>
                 <div class="max-w-[80%]">
                     <div class="glass-panel bg-white/5 p-3 rounded-xl rounded-tr-none text-sm text-zinc-200">
-                        ${text}
+                        ${text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}
                     </div>
                 </div>
             `;
-            container.appendChild(div);
         } else {
-            // 诺玛消息
+            // 使用 marked 解析 Markdown (确保 index.html 引入了 marked.js)
+            let htmlContent = text;
+            if (typeof marked !== 'undefined') {
+                htmlContent = marked.parse(text);
+            }
+
             div.innerHTML = `
                 <div class="w-10 h-10 rounded bg-red-900/10 border border-red-500/20 flex items-center justify-center shrink-0">
                     <i class="ri-eye-line text-red-500"></i>
                 </div>
-                <div class="max-w-[85%]">
-                    <div class="text-[10px] text-red-500/50 font-mono mb-1">NORN // GLM-4.1V</div>
-                    <div class="glass-panel p-4 rounded-xl rounded-tl-none text-sm text-zinc-200 font-mono border-red-900/30 type-target">
-                        <!-- Content will be typed here -->
+                <div class="max-w-[90%]">
+                    <div class="text-[10px] text-red-500/50 font-mono mb-1">NORN // SYSTEM</div>
+                    <div class="glass-panel p-4 rounded-xl rounded-tl-none text-sm text-zinc-200 font-mono border-red-900/30 markdown-body">
+                        ${htmlContent}
                     </div>
                 </div>
             `;
-            container.appendChild(div);
-            // 触发打字机特效
-            const target = div.querySelector('.type-target');
-            this.typeWriter(target, text);
         }
         
+        container.appendChild(div);
         container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-    },
-
-    typeWriter(element, text, index = 0) {
-        if (index < text.length) {
-            // 处理换行符
-            const char = text.charAt(index);
-            element.innerHTML = text.substring(0, index + 1).replace(/\n/g, '<br>') + '<span class="cursor-blink"></span>';
-            
-            // 滚动到底部
-            const container = document.getElementById('chat-container');
-            if(index % 5 === 0) container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-
-            setTimeout(() => this.typeWriter(element, text, index + 1), 15); // 打字速度
-        } else {
-            element.innerHTML = text.replace(/\n/g, '<br>'); // 移除光标
+        
+        // 如果有代码块，应用高亮
+        if (role !== 'user' && typeof hljs !== 'undefined') {
+            div.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
         }
     }
 };
