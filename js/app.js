@@ -131,53 +131,69 @@ const App = {
         return id;
     },
 
-    appendMessage(role, text, animate = true) {
+// 替换原有的 appendMessage 函数
+    appendMessage(role, text) {
         const container = document.getElementById('chat-container');
         if (!container) return;
 
         const div = document.createElement('div');
-        div.className = `flex gap-4 mb-6 msg-enter ${role === 'user' ? 'flex-row-reverse' : ''}`;
-        
+        // 添加 fade-in 动画类
+        div.className = `flex gap-4 mb-6 ${role === 'user' ? 'flex-row-reverse' : ''} opacity-0 animate-[slideUp_0.5s_ease-out_forwards]`;
+
         if (role === 'user') {
+            // 用户消息
             div.innerHTML = `
-                <div class="w-10 h-10 rounded-full bg-zinc-800 border border-white/10 shrink-0 overflow-hidden">
+                <div class="w-10 h-10 rounded-full bg-zinc-800 border border-white/10 shrink-0 overflow-hidden shadow-lg">
                     <img src="https://ui-avatars.com/api/?name=User&background=333&color=fff" class="w-full h-full">
                 </div>
                 <div class="max-w-[80%]">
-                    <div class="glass-panel bg-white/5 p-3 rounded-xl rounded-tr-none text-sm text-zinc-200">
+                    <div class="glass-panel bg-white/5 p-3 rounded-2xl rounded-tr-none text-sm text-zinc-200 border border-white/5">
                         ${text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}
                     </div>
                 </div>
             `;
         } else {
-            // 使用 marked 解析 Markdown (确保 index.html 引入了 marked.js)
-            let htmlContent = text;
-            if (typeof marked !== 'undefined') {
-                htmlContent = marked.parse(text);
-            }
+            // 诺玛消息 - 启用高级渲染
+            
+            // 1. 配置 marked 选项 (确保表格能渲染)
+            marked.setOptions({
+                gfm: true, // 开启 GitHub 风格 (必须!)
+                breaks: true, // 开启换行符转 <br>
+                headerIds: false
+            });
+
+            // 2. 解析 Markdown
+            const htmlContent = marked.parse(text);
 
             div.innerHTML = `
-                <div class="w-10 h-10 rounded bg-red-900/10 border border-red-500/20 flex items-center justify-center shrink-0">
-                    <i class="ri-eye-line text-red-500"></i>
+                <div class="w-10 h-10 rounded-lg bg-red-900/10 border border-red-500/20 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(220,38,38,0.3)]">
+                    <i class="ri-eye-line text-red-500 animate-pulse"></i>
                 </div>
                 <div class="max-w-[90%]">
-                    <div class="text-[10px] text-red-500/50 font-mono mb-1">NORN // SYSTEM</div>
-                    <div class="glass-panel p-4 rounded-xl rounded-tl-none text-sm text-zinc-200 font-mono border-red-900/30 markdown-body">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-[10px] text-red-500/70 font-mono tracking-wider">NORN // SYSTEM</span>
+                        <span class="w-1 h-1 rounded-full bg-red-500 animate-ping"></span>
+                    </div>
+                    
+                    <!-- 注意：这里应用了我们刚才写的 CSS 类 .markdown-body -->
+                    <div class="glass-panel p-5 rounded-2xl rounded-tl-none text-sm text-zinc-200 border-red-900/20 shadow-xl backdrop-blur-xl markdown-body">
                         ${htmlContent}
                     </div>
                 </div>
             `;
         }
-        
+
         container.appendChild(div);
-        container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
         
-        // 如果有代码块，应用高亮
-        if (role !== 'user' && typeof hljs !== 'undefined') {
+        // 代码高亮
+        if (role !== 'user') {
             div.querySelectorAll('pre code').forEach((block) => {
                 hljs.highlightElement(block);
             });
         }
+
+        // 平滑滚动到底部
+        container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
     }
 };
 
